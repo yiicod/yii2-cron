@@ -1,5 +1,6 @@
 {
     "name": "yiicod/yii2-cron",
+    "description": "Auto block|unblock console command for the Yii2 framework. One command without duplicate.",
     "type": "yii-extension",
     "license": "New BSD License",
     "authors": [
