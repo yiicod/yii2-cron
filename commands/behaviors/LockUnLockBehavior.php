@@ -5,17 +5,17 @@ namespace yiicod\cron\commands\behaviors;
 use Yii;
 use yii\base\Behavior;
 use yii\console\Controller;
+use yii\helpers\Console;
 
 /**
  * @author Orlov Alexey <aaorlov88@gmail.com>
  */
 class LockUnLockBehavior extends Behavior
 {
-
     /**
-     * File path
+     * @var bool
      */
-    protected $filePath;
+    public $enabled = true;
 
     /**
      * Time live file, 8 hour 28800
@@ -23,112 +23,156 @@ class LockUnLockBehavior extends Behavior
     public $timeLock = 28800;
 
     /**
+     * File path
+     */
+    protected $lockFilePath;
+
+    /**
      * Declares events and the corresponding event handler methods.
      * If you override this method, make sure you merge the parent result to the return value.
-     * @return array events (array keys) and the corresponding event handler methods (array values).
+     *
+     * @return array events (array keys) and the corresponding event handler methods (array values)
+     *
      * @see CBehavior::events
      */
     public function events()
     {
-        return array_merge(parent::events(), array(
+        return array_merge(parent::events(), [
             Controller::EVENT_BEFORE_ACTION => 'beforeAction',
             Controller::EVENT_AFTER_ACTION => 'afterAction',
-        ));
+        ]);
+    }
+
+    public function attach($owner)
+    {
+        if ($this->enabled) {
+            parent::attach($owner);
+        }
     }
 
     /**
      * Parses the command line arguments and determines which action to perform.
+     *
      * @param array $args command line arguments
+     *
      * @return array the action name, named options (name=>value), and unnamed options
+     *
      * @since 1.1.5
      */
     protected function resolveRequest($args)
     {
-        $options = array(); // named parameters
-        $params = array(); // unnamed parameters
+        $options = []; // named parameters
+        $params = []; // unnamed parameters
         foreach ($args as $arg) {
             if (preg_match('/^--(\w+)(=(.*))?$/', $arg, $matches)) {  // an option
                 $name = $matches[1];
                 $value = isset($matches[3]) ? $matches[3] : true;
                 if (isset($options[$name])) {
-                    if (!is_array($options[$name]))
-                        $options[$name] = array($options[$name]);
+                    if (!is_array($options[$name])) {
+                        $options[$name] = [$options[$name]];
+                    }
                     $options[$name][] = $value;
-                } else
+                } else {
                     $options[$name] = $value;
-            }
-            elseif (isset($action))
+                }
+            } elseif (isset($action)) {
                 $params[] = $arg;
-            else
+            } else {
                 $action = $arg;
+            }
         }
-        if (!isset($action))
+        if (!isset($action)) {
             $action = $this->defaultAction;
-
-        return array($action, $options, $params);
-    }
-
-    public function beforeAction($event)
-    {
-        if (empty($this->filePath)) {
-            $argv = array_diff($_SERVER['argv'], array('yiic'));
-            list($action, $options, $args) = $this->resolveRequest($argv);
-            $this->filePath = '/runtime/' . $event->action->id . preg_replace('/[^A-Za-z0-9-]+/', '_', trim(implode(' ', $args)) . ' ' . trim(implode(' ', $options))) . '.txt';
         }
 
-        if (!$this->_lock()) {
-            Yii::$app->end();
-        }
-    }
+        //Change "/" for "." if action not default (like "controller/action")
+        $action = str_replace('/', '.', $action);
 
-    public function afterAction($event)
-    {
-        $this->_unLock();
+        return [$action, $options, $params];
     }
 
     /**
-     * Check the end of the process. 
-     * If a thread is not locked, it is locked and start command. 
-     * @return boolean
+     * @param $event
+     *
+     * @return bool
      */
-    protected function _lock()
+    public function beforeAction($event)
     {
-        $lockFilePaht = Yii::$app->basePath . $this->filePath;
+        $this->prepareLockFilePath();
+
+        if (false === $this->lock()) {
+            $event->isValid = false;
+            $this->owner->stdout("Cron has run\n", Console::FG_RED);
+        }
+    }
+
+    /**
+     * @param $event
+     */
+    public function afterAction($event)
+    {
+        $this->unLock();
+    }
+
+    /**
+     * Prepare lock file path
+     */
+    protected function prepareLockFilePath()
+    {
+        $filePath = sprintf('%s/runtime/locks', Yii::$app->basePath);
+        if (false === is_dir($filePath)) {
+            @mkdir($filePath, 0755, true);
+        }
+        $argv = array_diff($_SERVER['argv'], ['yii']);
+        list($action, $options, $args) = $this->resolveRequest($argv);
+        $this->lockFilePath = sprintf('%s/%s.bin', $filePath, $action . preg_replace('/[^A-Za-z0-9-]+/', '_', trim(implode(' ', $args)) . trim(implode(' ', $options))));
+    }
+
+    /**
+     * Check the end of the process.
+     * If a thread is not locked, it is locked and start command.
+     *
+     * @return bool
+     */
+    protected function lock()
+    {
+        $lockFilePath = $this->lockFilePath;
 
         // current time
-        if (false === file_exists($lockFilePaht)) {
-            file_put_contents($lockFilePaht, time());
+        if (false === file_exists($lockFilePath)) {
+            file_put_contents($lockFilePath, time());
+
             return true;
         } else {
             $timeSec = time();
             // time change file
-            $timeFile = @filemtime($lockFilePaht) ? @filemtime($lockFilePaht) : time();
+            $timeFile = @filemtime($lockFilePath) ? @filemtime($lockFilePath) : time();
 
             // Now find out how much time has passed (in seconds)
             if (($timeSec - $timeFile) > $this->timeLock) {
-                $this->_unLock();
-
-                file_put_contents($lockFilePaht, time());
+                $this->unLock();
+                file_put_contents($lockFilePath, time());
 
                 return true;
             }
-            echo "Cron run\n";
+
             return false;
         }
     }
 
     /**
      * Unlocking the process of sending letters
-     * @return boolean
+     *
+     * @return bool
      */
-    protected function _unLock()
+    protected function unLock()
     {
-        $lockFilePaht = Yii::$app->basePath . $this->filePath;
-        if (true === file_exists($lockFilePaht)) {
-            return unlink($lockFilePaht);
+        $lockFilePath = $this->lockFilePath;
+
+        if (true === file_exists($lockFilePath)) {
+            return unlink($lockFilePath);
         } else {
             return true;
         }
     }
-
 }

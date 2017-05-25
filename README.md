@@ -7,9 +7,6 @@ Unlock cars exhibited at the expiration of the block if the server is down
 Config
 ------
 
-Insert in your commands
------------------------
-
 ```php
 public function behaviors()
 {
