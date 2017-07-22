@@ -60,11 +60,11 @@ class FileOutput
      */
     public function stdout($text)
     {
-        /** Disable empty output */
+        /* Disable empty output */
         if (empty($text)) {
             return;
         }
-        $text = sprintf("\n---------------------------------\n%s Stack output:\n---------------------------------\n%s", date("Y-m-d H:i:s"), $text);
+        $text = sprintf("\n---------------------------------\n%s Stack output:\n---------------------------------\n%s", date('Y-m-d H:i:s'), $text);
         if (($fp = @fopen($this->logFile, 'a')) === false) {
             throw new InvalidConfigException("Unable to append to log file: {$this->logFile}");
         }

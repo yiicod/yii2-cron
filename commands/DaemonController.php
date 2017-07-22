@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: orlov
- * Date: 12.04.17
- * Time: 14:38
- */
 
 namespace yiicod\cron\commands;
-
 
 use yii\console\Controller;
 use yii\helpers\Console;
@@ -15,6 +8,12 @@ use yiicod\cron\commands\exceptions\IsNotRunningException;
 use yiicod\cron\commands\exceptions\IsRunningException;
 use yiicod\cron\commands\traits\DaemonTrait;
 
+/**
+ * Class DaemonController
+ * Daemon controller for console
+ *
+ * @package yiicod\cron\commands
+ */
 abstract class DaemonController extends Controller
 {
     use DaemonTrait;
@@ -26,8 +25,6 @@ abstract class DaemonController extends Controller
 
     /**
      * Daemon worker
-     *
-     * @return void
      */
     abstract protected function worker();
 

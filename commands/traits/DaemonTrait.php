@@ -8,6 +8,11 @@ use yiicod\cron\commands\exceptions\IsNotRunningException;
 use yiicod\cron\commands\exceptions\IsRunningException;
 use yiicod\cron\commands\FileOutput;
 
+/**
+ * Trait DaemonTrait
+ *
+ * @package yiicod\cron\commands\traits
+ */
 trait DaemonTrait
 {
     /**
@@ -29,6 +34,7 @@ trait DaemonTrait
 
     /**
      * Reload daemon
+     *
      * @param callable $worker
      */
     protected function restartDaemon(callable $worker)
@@ -138,7 +144,7 @@ trait DaemonTrait
 
         // Remove all process
         $children[] = $pid;
-        while ($child = exec("pgrep -P " . reset($children))) {
+        while ($child = exec('pgrep -P ' . reset($children))) {
             array_unshift($children, $child);
         }
         foreach ($children as $child) {

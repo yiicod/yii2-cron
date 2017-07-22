@@ -1,19 +1,19 @@
-Cron extensions
-===============
+Cron extensions (Yii 2)
+=======================
 
-Block console commands until executed. 
-Unlock cars exhibited at the expiration of the block if the server is down
+Provides the logic and functionality to block console commands until they execute. 
+Unlocks commands exhibited at the expiration of the block if the server is down.
 
-Config
+Usage
 ------
-
 ```php
 public function behaviors()
 {
-    return \yii\helpers\ArrayHelper::merge(parent::behaviors(), array('LockUnLockBehavior' => array(
-                    'class' => 'yiicod\cron\commands\behaviors\LockUnLockBehavior',
-                    'timeLock' => 'duration' //Set timeLock
-                ))
+    return array(
+        'LockUnLockBehavior' => array(
+            'class' => 'yiicod\cron\commands\behaviors\LockUnLockBehavior',
+            'timeLock' => 0 //Set time lock duration for command in seconds
+        )
     );
 }
 ```

@@ -8,17 +8,12 @@ use yii\console\Controller;
 use yii\helpers\Console;
 
 /**
- * @author Orlov Alexey <aaorlov88@gmail.com>
+ * Exclude duplicate console command run.
  */
 class LockUnLockBehavior extends Behavior
 {
     /**
-     * @var bool
-     */
-    public $enabled = true;
-
-    /**
-     * Time live file, 8 hour 28800
+     * File time live. Default 28800 seconds (8 hour)
      */
     public $timeLock = 28800;
 
@@ -37,17 +32,10 @@ class LockUnLockBehavior extends Behavior
      */
     public function events()
     {
-        return array_merge(parent::events(), [
+        return [
             Controller::EVENT_BEFORE_ACTION => 'beforeAction',
             Controller::EVENT_AFTER_ACTION => 'afterAction',
-        ]);
-    }
-
-    public function attach($owner)
-    {
-        if ($this->enabled) {
-            parent::attach($owner);
-        }
+        ];
     }
 
     /**
@@ -125,12 +113,12 @@ class LockUnLockBehavior extends Behavior
         }
         $argv = array_diff($_SERVER['argv'], ['yii']);
         list($action, $options, $args) = $this->resolveRequest($argv);
-        $this->lockFilePath = sprintf('%s/%s.bin', $filePath, $action . preg_replace('/[^A-Za-z0-9-]+/', '_', trim(implode(' ', $args)) . trim(implode(' ', $options))));
+        $this->lockFilePath = mb_strtolower(sprintf('%s/%s.bin', $filePath, $action . preg_replace('/[^A-Za-z0-9-]+/', '_', trim(implode(' ', $args)) . trim(implode(' ', $options)))));
     }
 
     /**
      * Check the end of the process.
-     * If a thread is not locked, it is locked and start command.
+     * If a thread is not locked, it will be locked and started command.
      *
      * @return bool
      */
@@ -161,7 +149,7 @@ class LockUnLockBehavior extends Behavior
     }
 
     /**
-     * Unlocking the process of sending letters
+     * Unlocking the process
      *
      * @return bool
      */
