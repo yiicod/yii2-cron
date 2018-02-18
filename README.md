@@ -1,6 +1,8 @@
 Yii Cron extension
 ==================
 
+[![Latest Stable Version](https://poser.pugx.org/yiicod/yii2-cron/v/stable)](https://packagist.org/packages/yiicod/yii2-cron) [![Total Downloads](https://poser.pugx.org/yiicod/yii2-cron/downloads)](https://packagist.org/packages/yiicod/yii2-cron) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/yiicod/yii2-cron/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/yiicod/yii2-cron/?branch=master)[![Code Climate](https://codeclimate.com/github/yiicod/yii2-cron/badges/gpa.svg)](https://codeclimate.com/github/yiicod/yii2-cron)
+
 Provide a logic and functionality to block console commands until they execute. 
 Unlocks commands exhibited at the expiration of the block if the server is down.
 
