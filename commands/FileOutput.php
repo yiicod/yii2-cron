@@ -65,7 +65,7 @@ class FileOutput
             return;
         }
         $text = sprintf("\n---------------------------------\n%s Stack output:\n---------------------------------\n%s", date('Y-m-d H:i:s'), $text);
-        if (($fp = @fopen($this->logFile, 'a')) === false) {
+        if (false === ($fp = @fopen($this->logFile, 'a'))) {
             throw new InvalidConfigException("Unable to append to log file: {$this->logFile}");
         }
         @flock($fp, LOCK_EX);
@@ -94,7 +94,7 @@ class FileOutput
         $file = $this->logFile;
         for ($i = $this->maxLogFiles; $i >= 0; --$i) {
             // $i == 0 is the original log file
-            $rotateFile = $file . ($i === 0 ? '' : '.' . $i);
+            $rotateFile = $file . (0 === $i ? '' : '.' . $i);
             if (is_file($rotateFile)) {
                 // suppress errors because it's possible multiple processes enter into this section
                 if ($i === $this->maxLogFiles) {

@@ -2,6 +2,7 @@
 
 namespace yiicod\cron\commands;
 
+use Yii;
 use yii\console\Controller;
 use yii\helpers\Console;
 use yiicod\cron\commands\exceptions\IsNotRunningException;
@@ -22,6 +23,17 @@ abstract class DaemonController extends Controller
      * @var string
      */
     public $defaultAction = 'start';
+
+    public function beforeAction($action)
+    {
+        // Push each log message to related log target
+        Yii::$app->get('log')->flushInterval = 1;
+        foreach (Yii::$app->get('log')->targets as $i => $target) {
+            Yii::$app->get('log')->targets[$i]->exportInterval = 1;
+        }
+
+        return parent::beforeAction($action);
+    }
 
     /**
      * Daemon worker
